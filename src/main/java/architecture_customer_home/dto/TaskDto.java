@@ -12,7 +12,8 @@ public record TaskDto(
         Integer id,
         String description,
 
-        boolean completed, Priority priority,
+        boolean completed,
+        Priority priority,
         TaskStatus taskStatus,
         @JsonDeserialize(using = LocalDateDeserializer.class)
         @JsonFormat(pattern = "yyyy/MM/dd")

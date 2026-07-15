@@ -1,6 +1,8 @@
 package architecture_customer_home;
 
 import architecture_customer_home.dto.TaskDto;
+import architecture_customer_home.enums.Priority;
+import architecture_customer_home.enums.TaskStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -33,7 +37,8 @@ class ArchitectureCustomerDemoApplicationTests {
 
 	@Test
 	void taskCrudFlow() throws Exception {
-		TaskDto request = new TaskDto(null, "Study Spring Boot CRUD", false);
+		TaskDto request = new TaskDto(null, "Study Spring Boot CRUD", false, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7), "unnasigned");
+
 
 		String createdResponse = mockMvc.perform(post("/api/tasks/save")
 						.contentType(MediaType.APPLICATION_JSON)
@@ -52,7 +57,8 @@ class ArchitectureCustomerDemoApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$", hasSize(1)));
 
-		TaskDto updateRequest = new TaskDto(null, "Practice DTO and service layers", true);
+		TaskDto updateRequest = new TaskDto(null,"Study Spring Boot CRUD", false, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7),"unnasigned");
+
 
 		mockMvc.perform(put("/api/tasks/{id}", createdTask.id())
 						.contentType(MediaType.APPLICATION_JSON)
