@@ -1,0 +1,174 @@
+# ====================================================================
+# PLANTILLA YAML PARA REPOSITORIO ORQUESTADOR (DevSecOps)
+# ====================================================================
+# Esta plantilla se debe registrar en el repositorio central de DevSecOps
+# Ubicación sugerida: /pipelines/java-springboot/build-push-deploy.yml
+# ====================================================================
+
+name: "Java Spring Boot - Build, Push, Deploy"
+description: "Pipeline estándar para microservicios Spring Boot con JDK17"
+
+# Parámetros de entrada
+parameters:
+  repository:
+    description: "URL del repositorio satélite a procesar"
+    type: string
+    required: true
+    
+  branch:
+    description: "Rama a procesar"
+    type: string
+    default: "main"
+    
+  environment:
+    description: "Ambiente de destino"
+    type: choice
+    options: ["dev", "staging", "prod"]
+    default: "dev"
+    
+  skip_tests:
+    description: "Saltar tests (no recomendado)"
+    type: boolean
+    default: false
+
+# Configuración del job
+jobs:
+  build-and-deploy:
+    runs-on: [dispatcher-managed]  # Runner del Dispatcher
+    
+    steps:
+      # 1. Checkout del repositorio satélite
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ parameters.repository }}
+          ref: ${{ parameters.branch }}
+          fetch-depth: 0
+      
+      # 2. Cargar configuración del Dispatcher (.dispatcher/config.yml)
+      - name: "Load Dispatcher configuration"
+        run: |
+          echo "Loading .dispatcher/config.yml..."
+          cat .dispatcher/config.yml
+          
+      # 3. Setup Java
+      - name: "Setup Java 17"
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      # 4. Build
+      - name: "Build with Maven"
+        run: |
+          mvn -B clean package \
+            -DskipTests=${{ parameters.skip_tests }} \
+            -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO
+      
+      # 5. Tests
+      - name: "Run tests"
+        if: ${{ !parameters.skip_tests }}
+        run: |
+          mvn test \
+            -Dorg.slf4j.simpleLogger.defaultLogLevel=INFO
+      
+      # 6. Code analysis (SonarQube)
+      - name: "SonarQube analysis"
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.projectKey=bcp:task-crud-api \
+            -Dsonar.host.url=${{ env.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ env.SONAR_TOKEN }}
+      
+      # 7. Security scan (Trivy)
+      - name: "Container security scan"
+        run: |
+          # Escanear Dockerfile
+          trivy config Dockerfile --severity HIGH,CRITICAL
+      
+      # 8. Build Docker image
+      - name: "Build Docker image"
+        run: |
+          docker build -t task-crud-api:${{ github.sha }} \
+            -t task-crud-api:latest .
+      
+      # 9. Login a Docker Registry (credenciales del Dispatcher)
+      - name: "Login to GHCR"
+        env:
+          DOCKER_REGISTRY_TOKEN: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+        run: |
+          echo "${{ env.DOCKER_REGISTRY_TOKEN }}" | \
+            docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      
+      # 10. Push Docker image
+      - name: "Push Docker image"
+        run: |
+          docker tag task-crud-api:${{ github.sha }} \
+            ghcr.io/${{ github.repository_owner }}/task-crud-api:${{ github.sha }}
+          docker tag task-crud-api:latest \
+            ghcr.io/${{ github.repository_owner }}/task-crud-api:latest
+          
+          docker push ghcr.io/${{ github.repository_owner }}/task-crud-api:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository_owner }}/task-crud-api:latest
+      
+      # 11. Deploy a Kubernetes (por ambiente)
+      - name: "Deploy to Kubernetes (${{ parameters.environment }})"
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          K8S_NAMESPACE: ${{ parameters.environment }}
+        run: |
+          kubectl config use-context ${{ parameters.environment }}
+          
+          # Actualizar deployment con nueva imagen
+          kubectl set image deployment/task-app \
+            task-app=ghcr.io/${{ github.repository_owner }}/task-crud-api:${{ github.sha }} \
+            -n ${{ env.K8S_NAMESPACE }}
+          
+          # Esperar a que se estabilice
+          kubectl rollout status deployment/task-app \
+            -n ${{ env.K8S_NAMESPACE }} --timeout=5m
+      
+      # 12. Health check
+      - name: "Health check"
+        run: |
+          SERVICE_URL=$(kubectl get svc task-app -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' -n ${{ parameters.environment }})
+          
+          for i in {1..10}; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://$SERVICE_URL/actuator/health)
+            if [ $HTTP_CODE -eq 200 ]; then
+              echo "✅ Service is healthy"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "❌ Service health check failed"
+          exit 1
+      
+      # 13. Notificación de éxito
+      - name: "Notify success"
+        if: success()
+        run: |
+          echo "✅ Pipeline completado exitosamente"
+          # Webhook a Slack, etc.
+      
+      # 14. Notificación de fallo
+      - name: "Notify failure"
+        if: failure()
+        run: |
+          echo "❌ Pipeline falló"
+          # Webhook a Slack, on-call, etc.
+
+# Políticas de seguridad
+policies:
+  - type: "branch_protection"
+    enabled: true
+    
+  - type: "code_review"
+    min_approvers: 1
+    
+  - type: "security_scan"
+    fail_on_critical: true

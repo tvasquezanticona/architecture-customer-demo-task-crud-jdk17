@@ -1,0 +1,58 @@
+# ====================================================================
+# DISPATCHER LOCAL OVERRIDES (Opcional)
+# ====================================================================
+# Nota: Solo usar si el Dispatcher permite configuración local
+# Para la mayoría de casos, usar config.yml centralizado
+# ====================================================================
+
+# Parámetros locales específicos
+local_overrides:
+  # Rutas locales personalizadas
+  dockerfile_path: "./Dockerfile"
+  docker_compose_path: "./docker-compose.yml"
+  kubernetes_manifests_path: "./k8s/"
+  
+  # Variables de entorno locales
+  environment:
+    MAVEN_OPTS: "-Xmx2048m"
+    JAVA_VERSION: "17"
+    
+  # Build scripts personalizados
+  build_scripts:
+    pre_build: "./scripts/pre-build.sh"
+    post_build: "./scripts/post-build.sh"
+
+# Configuración de test
+testing:
+  enabled: true
+  test_framework: "JUnit5"
+  test_command: "mvn test"
+  coverage_tool: "JaCoCo"
+  coverage_report: "target/site/jacoco/index.html"
+
+# Configuración de análisis estático
+code_analysis:
+  sonarqube:
+    enabled: true
+    project_key: "bcp:task-crud-api"
+    sources: "src/main/java"
+    exclusions: "src/test/**,**/generated/**"
+
+# Tags personalizados
+tags:
+  - "task-management"
+  - "spring-boot-3"
+  - "jdk17"
+  - "mysql"
+  - "microservice"
+  - "crud-api"
+
+# Owner y responsables
+owners:
+  - name: "Backend Team"
+    email: "backend@bcp.com"
+    slack: "@backend-channel"
+    
+  - name: "DevSecOps"
+    email: "devops@bcp.com"
+    slack: "@devops-channel"

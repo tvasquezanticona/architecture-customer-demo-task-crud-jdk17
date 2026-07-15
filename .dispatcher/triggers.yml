@@ -1,0 +1,165 @@
+# ====================================================================
+# DISPATCHER WEBHOOKS & TRIGGERS CONFIGURATION
+# ====================================================================
+# Define qué eventos activan el Dispatcher
+# ====================================================================
+
+webhooks:
+  # GitHub webhooks
+  github:
+    enabled: true
+    url: "https://dispatcher.bcp.com/webhooks/github"
+    secret_ref: "GITHUB_WEBHOOK_SECRET"
+    events:
+      - "push"
+      - "pull_request"
+      - "release"
+
+# Triggers por rama
+branch_triggers:
+  # Main branch - Deploy automático a PROD (con aprobación)
+  main:
+    events: ["push"]
+    action: "build-test-push-deploy-prod"
+    requires_approval: true
+    approval_roles: ["lead", "tech-lead"]
+    
+  # Develop branch - Deploy automático a DEV
+  develop:
+    events: ["push"]
+    action: "build-test-push-deploy-dev"
+    requires_approval: false
+    
+  # Release branches - Deploy a STAGING
+  release/**:
+    events: ["push"]
+    action: "build-test-push-deploy-staging"
+    requires_approval: true
+    approval_roles: ["release-manager"]
+    
+  # Feature branches - Solo build y test
+  feature/**:
+    events: ["push"]
+    action: "build-test"
+    requires_approval: false
+    
+  # Bugfix branches - Build y test
+  bugfix/**:
+    events: ["push"]
+    action: "build-test"
+    requires_approval: false
+
+# Pull request triggers
+pull_request_triggers:
+  # Validación en PRs
+  enabled: true
+  events:
+    - "opened"
+    - "synchronize"  # Cuando se agregan commits
+    - "reopened"
+    
+  actions:
+    - "build"
+    - "test"
+    - "code-analysis"
+    - "security-scan"
+    - "dependency-check"
+    
+  # Requerimientos antes de merge
+  required_checks:
+    - "build:success"
+    - "tests:success"
+    - "coverage:>80%"
+    - "security-scan:passed"
+    - "code-review:approved"
+
+# Release triggers
+release_triggers:
+  enabled: true
+  events:
+    - "published"  # Cuando se publica una release
+    
+  action: "build-push-deploy-prod"
+  requires_approval: true
+  approval_roles: ["release-manager", "tech-lead"]
+
+# Manual triggers
+manual_triggers:
+  # Permite ejecuciones manuales desde la UI del Dispatcher
+  enabled: true
+  
+  deploy_dev:
+    description: "Desplegar manualmente a DEV"
+    environments: ["dev"]
+    allowed_roles: ["developer", "tech-lead"]
+    
+  deploy_staging:
+    description: "Desplegar manualmente a STAGING"
+    environments: ["staging"]
+    allowed_roles: ["qa", "tech-lead", "release-manager"]
+    
+  deploy_prod:
+    description: "Desplegar manualmente a PROD"
+    environments: ["prod"]
+    allowed_roles: ["tech-lead", "release-manager"]
+    
+  rollback:
+    description: "Rollback a versión anterior"
+    environments: ["prod", "staging"]
+    allowed_roles: ["tech-lead", "release-manager"]
+
+# Scheduled triggers (cron)
+scheduled_triggers:
+  enabled: true
+  
+  security_scan_nightly:
+    schedule: "0 2 * * *"  # 2 AM UTC diario
+    action: "security-scan"
+    description: "Escaneo de seguridad nocturno"
+    
+  dependency_check_weekly:
+    schedule: "0 3 * * 0"  # Domingos 3 AM UTC
+    action: "dependency-check"
+    description: "Validación de dependencias"
+
+# Filtros para evitar triggers innecesarios
+filters:
+  # Ignorar cambios en estos archivos
+  ignore_patterns:
+    - "*.md"
+    - ".gitignore"
+    - "docs/**"
+    - ".idea/**"
+    - "*.log"
+    
+  # Solo procesar si hay cambios en estas rutas
+  include_patterns:
+    - "src/**"
+    - "pom.xml"
+    - "Dockerfile"
+    - ".dispatcher/**"
+
+# Rate limiting
+rate_limiting:
+  enabled: true
+  max_concurrent_per_branch: 3
+  max_per_hour: 20
+  queue_timeout: "30m"
+
+# Notificaciones de ejecución
+notifications:
+  on_start:
+    enabled: true
+    channels: ["slack"]
+    message: "🚀 Build iniciado: ${GIT_BRANCH} (${GIT_SHA})"
+    
+  on_success:
+    enabled: true
+    channels: ["slack", "github-status"]
+    message: "✅ Build exitoso"
+    
+  on_failure:
+    enabled: true
+    channels: ["slack", "email", "github-status"]
+    message: "❌ Build falló: revisar logs"
+    mention_on_call: true

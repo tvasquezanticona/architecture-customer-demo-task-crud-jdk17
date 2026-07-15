@@ -1,0 +1,248 @@
+# ====================================================================
+# DISPATCHER CONFIGURATION - Task CRUD Microservice
+# ====================================================================
+# Modelo: Centralizado (BCP DevSecOps)
+# Repositorio: architecture-customer-demo-task-crud-jdk17
+# Última actualización: 2026-07-13
+# ====================================================================
+
+# Información del microservicio
+service:
+  name: task-crud-api
+  description: "CRUD API para gestión de tareas - JDK17 Spring Boot"
+  owner: "Tribu Backend | DevSecOps Aligned"
+  repository: "architecture-customer-demo-task-crud-jdk17"
+  
+# Versión de modelo de adopción
+model:
+  dispatcher_version: "1.0"
+  adoption_model: "Centralized - BCP DevSecOps"
+  status: "Migration in progress"
+  legacy_deprecated: true
+
+# Referencias al orquestador central
+dispatcher:
+  # Ubicación del repositorio orquestador (a confirmar con DevSecOps)
+  orchestrator_repo: "TBD"  # Ej: org/devops-orchestrator
+  orchestrator_ref: "main"
+  
+  # Ruta de la plantilla en el orquestador
+  pipeline_template_path: "pipelines/java-springboot/build-push-deploy.yml"
+  
+  # Webhooks y triggers
+  triggers:
+    - event: "push"
+      branches: ["main", "develop", "release/**"]
+      action: "build-test-deploy"
+      
+    - event: "pull_request"
+      branches: ["main", "develop"]
+      action: "build-test-validate"
+      
+    - event: "manual"
+      action: "manual-deploy"
+
+# Runners del Dispatcher (asignación centralizada)
+runners:
+  # El Dispatcher asigna automáticamente; estos son requisitos
+  requirements:
+    - os: "linux"
+      arch: "x86_64"
+      labels: ["docker", "java17", "maven"]
+      
+    # Capacidades requeridas
+    resources:
+      min_memory: "4Gi"
+      min_cpu: "2"
+      min_disk: "20Gi"
+      
+    # Herramientas requeridas preinstaladas
+    tools:
+      - "java:17"
+      - "maven:3.9"
+      - "docker:24"
+      - "kubectl:latest"
+      
+  # Timeouts
+  timeouts:
+    build: "30m"
+    test: "15m"
+    deploy: "20m"
+
+# Secretos centralizados (gestionados por Dispatcher/Vault)
+secrets:
+  # Docker Registry (GHCR)
+  - name: "DOCKER_REGISTRY_TOKEN"
+    description: "GitHub Container Registry token"
+    source: "central-vault"
+    scope: ["build", "push"]
+    
+  # Database credentials
+  - name: "DB_USERNAME"
+    description: "MySQL username"
+    source: "central-vault"
+    scope: ["deploy"]
+    
+  - name: "DB_PASSWORD"
+    description: "MySQL password"
+    source: "central-vault"
+    scope: ["deploy"]
+    
+  # Kubernetes access
+  - name: "KUBECONFIG"
+    description: "Kubernetes config"
+    source: "central-vault"
+    scope: ["deploy"]
+
+# Políticas de seguridad aplicables
+policies:
+  # Escaneos automáticos
+  security_scans:
+    - type: "sast"
+      tool: "sonarqube"
+      enabled: true
+      fail_on_critical: true
+      
+    - type: "dependency-check"
+      tool: "snyk"
+      enabled: true
+      fail_on_high: true
+      
+    - type: "container-scan"
+      tool: "trivy"
+      enabled: true
+      fail_on_critical: true
+  
+  # Validaciones
+  validations:
+    - type: "code-review"
+      required: true
+      min_approvers: 1
+      
+    - type: "test-coverage"
+      required: true
+      min_percentage: 80
+      
+    - type: "branch-protection"
+      enabled: true
+      enforce_admins: false
+
+# Variables de contexto predefinidas
+context:
+  # Disponibles automáticamente del Dispatcher
+  env_vars:
+    - "DISPATCHER_BUILD_NUMBER"
+    - "DISPATCHER_GIT_SHA"
+    - "DISPATCHER_GIT_BRANCH"
+    - "DISPATCHER_GIT_AUTHOR"
+    - "DISPATCHER_TIMESTAMP"
+    
+  # Parámetros que podemos pasar
+  custom_params:
+    - name: "ENV"
+      default: "dev"
+      allowed: ["dev", "staging", "prod"]
+      
+    - name: "SKIP_TESTS"
+      default: "false"
+      allowed: ["true", "false"]
+
+# Artefactos y salida
+artifacts:
+  # Ubicación de artefactos
+  registry:
+    type: "ghcr"
+    namespace: "github-user"  # Reemplazar
+    images:
+      - "task-crud-api:latest"
+      - "task-crud-api:${DISPATCHER_GIT_SHA}"
+      
+  # Notificaciones de resultado
+  notifications:
+    success:
+      channels: ["slack", "github-status"]
+      
+    failure:
+      channels: ["slack", "email", "github-status"]
+      pagerduty: false
+
+# Entornos de despliegue
+environments:
+  - name: "development"
+    namespace: "dev"
+    k8s_cluster: "dev-cluster"
+    auto_deploy: true
+    branches: ["develop"]
+    
+  - name: "staging"
+    namespace: "staging"
+    k8s_cluster: "staging-cluster"
+    auto_deploy: false
+    branches: ["release/**"]
+    requires_approval: true
+    
+  - name: "production"
+    namespace: "production"
+    k8s_cluster: "prod-cluster"
+    auto_deploy: false
+    branches: ["main"]
+    requires_approval: true
+    min_approvers: 2
+    change_window: "08:00-18:00 UTC Mon-Fri"
+
+# Monitoreo y trazabilidad
+monitoring:
+  # Logs centralizados
+  logs:
+    destination: "central-logging"  # ELK, Splunk, etc.
+    retention_days: 90
+    
+  # Auditoría
+  audit:
+    enabled: true
+    track: ["deployments", "secrets_access", "policy_violations"]
+    
+  # Métricas
+  metrics:
+    - "build_duration"
+    - "test_coverage"
+    - "deployment_success_rate"
+    - "incident_count"
+
+# SLAs y tiempos de respuesta
+slas:
+  build_time: "< 10 minutes"
+  test_time: "< 5 minutes"
+  deploy_time: "< 15 minutes"
+  incident_response: "< 30 minutes"
+
+# Contactos y soporte
+support:
+  team: "DevSecOps Tribe"
+  slack_channel: "#devops-support"
+  email: "devops@bcp.com"
+  oncall_page: "https://oncall.example.com"
+  
+# Configuración local específica (README y documentación)
+local_config:
+  # Este archivo NO se modifica; para cambios locales usar .dispatcher/config-local.yml
+  allow_overrides: false
+  
+# Estado de migración
+migration:
+  status: "in_progress"
+  legacy_workflows_removed: false
+  new_dispatcher_tested: false
+  production_ready: false
+  target_completion_date: "2026-08-13"
+  
+# Referencias y documentación
+documentation:
+  - title: "Modelo Dispatcher - Guía de Adopción"
+    path: "docs/dispatcher/ADOPTION_GUIDE.md"
+    
+  - title: "Troubleshooting Dispatcher"
+    path: "docs/dispatcher/TROUBLESHOOTING.md"
+    
+  - title: "Flowchart: Ejecución Post-Dispatcher"
+    path: "docs/dispatcher/EXECUTION_FLOW.md"
