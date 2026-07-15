@@ -3,6 +3,7 @@ package architecture_customer_home.service.impl;
 import architecture_customer_home.domain.builder.TaskBuilder;
 import architecture_customer_home.dto.TaskDto;
 import architecture_customer_home.dto.request.CreateTaskRequest;
+import architecture_customer_home.dto.request.UpdateTaskRequest;
 import architecture_customer_home.exception.TaskNotFoundException;
 import architecture_customer_home.model.Tasks;
 import architecture_customer_home.repository.TaskRepository;
@@ -48,14 +49,14 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDto update(Integer id, CreateTaskRequest request) {
+    public TaskDto update(Integer id, UpdateTaskRequest request) {
         Tasks task = findEntityById(id);
         task.setDescription(request.description());
         task.setPriority(request.priority());
-        task.setStatus(request.taskStatus());
+        task.setStatus(request.status());
         task.setDueDate(request.dueDate());
         task.setAssignedTo(request.assignedTo());
-
+        task.setCompleted(request.completed());
         return toDto(taskRepository.save(task));
     }
 

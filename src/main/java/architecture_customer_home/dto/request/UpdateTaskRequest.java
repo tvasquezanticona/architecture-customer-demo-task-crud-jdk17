@@ -1,15 +1,18 @@
 package architecture_customer_home.dto.request;
 
-import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
-import architecture_customer_home.enums.Priority;
 import architecture_customer_home.enums.TaskStatus;
+import architecture_customer_home.config.LocalDateDeserializer;
+import java.time.LocalDate;
+import architecture_customer_home.enums.Priority;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 public record UpdateTaskRequest(
         String description,
         Priority priority,
         TaskStatus status,
-        LocalDateTime dueDate,
-        String assignedTo
+        @JsonDeserialize(using = LocalDateDeserializer.class)
+        LocalDate dueDate,
+        String assignedTo,
+        Boolean completed
 ) {
 }

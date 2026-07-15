@@ -1,15 +1,12 @@
-# Build stage
-FROM maven:3.9-eclipse-temurin-17 AS builder
-WORKDIR /build
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
+FROM jenkins/jenkins:lts
 
-# Runtime stage
-FROM eclipse-temurin:17-jre-alpine
-WORKDIR /app
-COPY --from=builder /build/target/*.jar app.jar
+USER root
 
-EXPOSE 8080
+# Instalar Java y Maven
+RUN apt-get update && apt-get install -y \
+    openjdk-21-jre-headless \
+    maven \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+USER jenkins

@@ -2,6 +2,7 @@ package architecture_customer_home.service;
 
 import architecture_customer_home.dto.TaskDto;
 import architecture_customer_home.dto.request.CreateTaskRequest;
+import architecture_customer_home.dto.request.UpdateTaskRequest;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public interface TaskService {
 
     TaskDto create(CreateTaskRequest request);
 
-    TaskDto update(Integer id, CreateTaskRequest request);
+    TaskDto update(Integer id, UpdateTaskRequest request);
 
     void delete(Integer id);
 }

@@ -2,6 +2,7 @@ package architecture_customer_home.controller;
 
 import architecture_customer_home.dto.TaskDto;
 import architecture_customer_home.dto.request.CreateTaskRequest;
+import architecture_customer_home.dto.request.UpdateTaskRequest;
 import architecture_customer_home.service.TaskService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +42,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public TaskDto updateTask(@PathVariable Integer id, @RequestBody CreateTaskRequest request) {
+    public TaskDto updateTask(@PathVariable Integer id, @RequestBody UpdateTaskRequest request) {
         return taskService.update(id, request);
     }
 
