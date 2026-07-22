@@ -1,10 +1,19 @@
 pipeline {
-    agent any
+    agent none
     
     stages {
-        stage('Checkout') {
+        stage('Delegar al Dispatcher') {
             steps {
-                checkout scm
+                script {
+                // Ejemplo de dispara un job remoto en el orquestador
+                    build job: 'dispatcher/build-and-test',
+                          parameters: [
+                                  string(name: 'REPO_URL', value: env.GIT_URL),
+                                  string(name: 'COMMIT', value: env.GIT_COMMIT),
+                                  string(name: 'SERVICE_NAME', value: 'task-crud')
+                          ],
+                          wait: true
+                }
             }
         }
         
