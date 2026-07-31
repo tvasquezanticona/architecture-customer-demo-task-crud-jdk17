@@ -22,6 +22,7 @@ services:
     build: .
     container_name: task-crud-app
     environment:
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/task_db
       SPRING_DATASOURCE_USERNAME: taskuser
       SPRING_DATASOURCE_PASSWORD: taskpass123
@@ -45,7 +46,7 @@ services:
     image: grafana/loki:2.9.6
     container_name: task-crud-loki
     ports:
-      - "3100:3100"
+      - "3101:3100"
     command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
 
@@ -65,7 +66,7 @@ services:
     image: grafana/grafana:10.4.2
     container_name: task-crud-grafana
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "false"
     volumes:
