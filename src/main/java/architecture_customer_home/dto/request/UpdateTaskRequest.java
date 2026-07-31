@@ -4,11 +4,13 @@ import architecture_customer_home.enums.TaskStatus;
 import architecture_customer_home.config.LocalDateDeserializer;
 import java.time.LocalDate;
 import architecture_customer_home.enums.Priority;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 public record UpdateTaskRequest(
         String description,
         Priority priority,
+        @JsonProperty("taskStatus")
         TaskStatus status,
         @JsonDeserialize(using = LocalDateDeserializer.class)
         LocalDate dueDate,

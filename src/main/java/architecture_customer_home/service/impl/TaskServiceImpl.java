@@ -8,6 +8,7 @@ import architecture_customer_home.enums.Priority;
 import architecture_customer_home.enums.TaskStatus;
 import architecture_customer_home.exception.BusinessException;
 import architecture_customer_home.exception.ErrorCode;
+import architecture_customer_home.exception.InvalidTaskStateException;
 import architecture_customer_home.exception.TaskNotFoundException;
 import architecture_customer_home.model.Tasks;
 import architecture_customer_home.repository.TaskRepository;
@@ -132,14 +133,53 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
+    private void validateStateTransition(TaskStatus current, TaskStatus target) {
+        if (current == TaskStatus.COMPLETED && target != TaskStatus.COMPLETED ){
+            throw new InvalidTaskStateException(ErrorCode.TASK_INVALID_STATE_TRANSITION,"Una tarea COMPLETADA no se puede Reabrir." + target);
+        }
+    }
 
     @Override
     public TaskDto update(Integer id, UpdateTaskRequest request) {
-        return null;
-    }
+
+            Tasks tasks = findModelEntityById(id);
+
+            validateBusinessRule(request.description(),request.priority(),
+                request.status(),request.dueDate(),
+                request.assignedTo());
+
+            validateStateTransition(tasks.getStatus(), request.status());
+
+                    tasks.setDescription(request.description() );
+                    tasks.setPriority(request.priority());
+                    tasks.setStatus(request.status());
+                    tasks.setDueDate(request.dueDate());
+                    tasks.setAssignedTo(request.assignedTo());
+                    tasks.setCompleted(request.completed());
+
+            Tasks saved = taskRepository.save(tasks);
+            log.warn("Tarea Creada [id = {}, status={}]",id,tasks.getStatus());
+
+
+            return toDto(saved);
+
+        }
 
     @Override
     public void delete(Integer id) {
 
+        Tasks tasks = findModelEntityById(id);
+
+        if (tasks.getStatus()==TaskStatus.COMPLETED){
+            log.warn("Intento de eliminar tarea no permitida [id={}, status={}]", + id, tasks.getStatus());
+            throw new InvalidTaskStateException(ErrorCode.TASK_DELETE_NOT_ALLOWED,"Tarea en estado COMPLETADO");
+        }
+
+        taskRepository.delete(tasks);
+
     }
+
+
 }
+
+
