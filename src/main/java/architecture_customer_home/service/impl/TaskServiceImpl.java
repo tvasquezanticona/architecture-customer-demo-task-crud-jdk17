@@ -75,6 +75,7 @@ public class TaskServiceImpl implements TaskService {
                 .withStatus(request.status())
                 .withDueDate(request.dueDate())
                 .withAssignedTo(request.assignedTo())
+                .withCompleted(request.completed())
                 .build();
         Tasks saved = taskRepository.save(tasks);
         log.info("Tarea Creada [id = {}, status={}]");

@@ -2,6 +2,7 @@ package architecture_customer_home.dto.request;
 
 import architecture_customer_home.enums.TaskStatus;
 import architecture_customer_home.config.LocalDateDeserializer;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ public record CreateTaskRequest(
         Priority priority,
 
         @NotNull(message = "El estado es requerido")
+        @JsonProperty("taskStatus")
         TaskStatus status,
         @JsonDeserialize(using = LocalDateDeserializer.class)
         LocalDate dueDate,

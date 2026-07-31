@@ -30,6 +30,12 @@ public class TaskBuilder {
     private TaskStatus status = TaskStatus.PENDING;
     private LocalDate dueDate;
     private String assignedTo;
+    private Boolean completed;
+
+    public TaskBuilder withCompleted(Boolean completed){
+        this.completed = completed;
+        return this;
+    }
 
     public TaskBuilder withDescription(String description) {
         this.description = description;
@@ -67,6 +73,7 @@ public class TaskBuilder {
         task.setStatus(status);
         task.setDueDate(dueDate);
         task.setAssignedTo(assignedTo);
+        task.setCompleted(completed);
 
         return task;
     }
