@@ -170,7 +170,7 @@ public class TaskServiceImpl implements TaskService {
 
         Tasks tasks = findModelEntityById(id);
 
-        if (tasks.getStatus()==TaskStatus.COMPLETED){
+        if (tasks.getStatus()==TaskStatus.IN_PROGRESS){
             log.warn("Intento de eliminar tarea no permitida [id={}, status={}]", + id, tasks.getStatus());
             throw new InvalidTaskStateException(ErrorCode.TASK_DELETE_NOT_ALLOWED,"Tarea en estado COMPLETADO");
         }
