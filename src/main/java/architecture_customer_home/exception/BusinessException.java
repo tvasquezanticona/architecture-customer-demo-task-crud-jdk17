@@ -1,7 +1,10 @@
 package architecture_customer_home.exception;
 
-public class BusinessException extends RuntimeException {
-    public BusinessException(String message) {
-        super(message);
+import org.springframework.http.HttpStatus;
+
+public class BusinessException extends ApiException {
+
+    public BusinessException(ErrorCode errorCode, String message) {
+        super(errorCode, HttpStatus.BAD_REQUEST, message);
     }
 }

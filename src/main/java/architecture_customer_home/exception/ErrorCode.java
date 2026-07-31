@@ -1,0 +1,15 @@
+package architecture_customer_home.exception;
+
+public enum ErrorCode {
+    TASK_NOT_FOUND,
+    TASK_DUE_DATE_INVALID,
+    TASK_ASSIGNEE_REQUIRED,
+    TASK_DELETE_NOT_ALLOWED,
+    TASK_INVALID_STATE_TRANSITION,
+    VALIDATION_ERROR,
+    INTERNAL_ERROR,
+
+    TASK_DESCRIPTION_REQUIRED,
+    PRIORITY_REQUIRED
+
+}

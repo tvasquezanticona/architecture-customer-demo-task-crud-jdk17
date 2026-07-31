@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty scope="context" name="appName" source="spring.application.name"/>
+
+    <!-- Consola en texto legible, útil en desarrollo local -->
+    <appender name="CONSOLE_PLAIN" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [traceId=%X{traceId}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Consola en JSON estructurado: este es el formato que deben leer
+         Promtail/Filebeat para enviarlo a Loki/Elasticsearch. Cada línea es
+         un documento JSON con traceId, nivel, logger, mensaje y stacktrace,
+         lo que permite filtrar y armar dashboards de tasas de error por
+         servicio, endpoint o errorCode. -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service":"${appName}"}</customFields>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>errorCode</includeMdcKeyName>
+        </encoder>
+    </appender>
+
+    <!-- Perfil local: logs legibles para el desarrollador -->
+    <springProfile name="local,default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_PLAIN"/>
+        </root>
+    </springProfile>
+
+    <!-- Perfil productivo/QA: JSON para que el stack de observabilidad
+         centralizado (el mismo que probablemente traiga el modelo Dispatcher
+         de DevSecOps) pueda indexar y correlacionar los logs. -->
+    <springProfile name="prod,qa,dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_JSON"/>
+        </root>
+    </springProfile>
+
+    <logger name="architecture_customer_home" level="DEBUG"/>
+
+</configuration>
