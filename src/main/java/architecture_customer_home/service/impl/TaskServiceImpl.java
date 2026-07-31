@@ -12,8 +12,6 @@ import architecture_customer_home.exception.TaskNotFoundException;
 import architecture_customer_home.model.Tasks;
 import architecture_customer_home.repository.TaskRepository;
 import architecture_customer_home.service.TaskService;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
