@@ -37,7 +37,7 @@ class ArchitectureCustomerDemoApplicationTests {
 
 	@Test
 	void taskCrudFlow() throws Exception {
-		TaskDto request = new TaskDto(null, "Study Spring Boot CRUD", false, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7), "unnasigned");
+		TaskDto request = new TaskDto(null, "Study Spring Boot CRUD", true, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7), "unnasigned");
 
 
 		String createdResponse = mockMvc.perform(post("/api/tasks/save")
@@ -46,7 +46,7 @@ class ArchitectureCustomerDemoApplicationTests {
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id").exists())
 				.andExpect(jsonPath("$.description").value("Study Spring Boot CRUD"))
-				.andExpect(jsonPath("$.completed").value(false))
+				.andExpect(jsonPath("$.completed").value(true))
 				.andReturn()
 				.getResponse()
 				.getContentAsString();
