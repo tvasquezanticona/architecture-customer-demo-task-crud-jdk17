@@ -73,7 +73,7 @@ public class TaskBuilder {
         task.setStatus(status);
         task.setDueDate(dueDate);
         task.setAssignedTo(assignedTo);
-        task.setCompleted(completed);
+        //task.setCompleted(completed);
 
         return task;
     }
