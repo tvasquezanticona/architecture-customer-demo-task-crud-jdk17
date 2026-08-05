@@ -50,12 +50,19 @@ public class Tasks {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Transient
-    public boolean isCompleted() {
-        return this.status == TaskStatus.COMPLETED;
+    public void setCompleted(Boolean completed) {
     }
 
-    public void setCompleted(boolean completed) {
-        this.status = completed ? TaskStatus.COMPLETED : TaskStatus.PENDING;
+    public boolean isCompleted() {
+        return false;
     }
+
+//    @Transient
+//    public boolean isCompleted() {
+//        return this.status == TaskStatus.COMPLETED;
+//    }
+
+//    public void setCompleted(boolean completed) {
+//        this.status = completed ? TaskStatus.COMPLETED : TaskStatus.PENDING;
+//    }
 }

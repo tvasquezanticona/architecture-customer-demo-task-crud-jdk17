@@ -79,12 +79,10 @@ public class TaskServiceImpl implements TaskService {
                 .withAssignedTo(request.assignedTo())
                 .withCompleted(request.completed())
                 .build();
-        if(request.status().equals(TaskStatus.PENDING)){
-            tasks.setStatus(TaskStatus.PENDING);
-        }
-        if (tasks.isCompleted()){
-            tasks.setStatus(TaskStatus.COMPLETED);
-        }
+//        if(request.status().equals(TaskStatus.PENDING)){
+//            tasks.setStatus(TaskStatus.PENDING);
+//        }
+
         Tasks saved = taskRepository.save(tasks);
         log.info("Tarea Creada [id = {}, status={}]");
 
