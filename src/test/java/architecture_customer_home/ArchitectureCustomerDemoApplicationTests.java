@@ -37,7 +37,7 @@ class ArchitectureCustomerDemoApplicationTests {
 
 	@Test
 	void taskCrudFlow() throws Exception {
-		TaskDto request = new TaskDto(null, "Study Spring Boot CRUD", true, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7), "unnasigned");
+		TaskDto request = new TaskDto(null, "Study Spring Boot CRUD", false, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7), "unnasigned");
 
 
 		String createdResponse = mockMvc.perform(post("/api/tasks/save")
@@ -46,7 +46,7 @@ class ArchitectureCustomerDemoApplicationTests {
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id").exists())
 				.andExpect(jsonPath("$.description").value("Study Spring Boot CRUD"))
-				.andExpect(jsonPath("$.completed").value(true))
+				.andExpect(jsonPath("$.completed").value(false))
 				.andReturn()
 				.getResponse()
 				.getContentAsString();
@@ -58,14 +58,14 @@ class ArchitectureCustomerDemoApplicationTests {
 				.andExpect(jsonPath("$", hasSize(1)));
 
 		//TaskDto updateRequest = new TaskDto(null,"Study Spring Boot CRUD", false, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7),"unnasigned");
-		TaskDto updateRequest = new TaskDto(null,"Practice DTO and service layers", true, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7),"unnasigned");
+		TaskDto updateRequest = new TaskDto(null,"Practice DTO and service layers", false, Priority.MEDIUM, TaskStatus.PENDING, LocalDate.now().plusDays(7),"unnasigned");
 
 		mockMvc.perform(put("/api/tasks/{id}", createdTask.id())
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(objectMapper.writeValueAsString(updateRequest)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.description").value("Practice DTO and service layers"))
-				.andExpect(jsonPath("$.completed").value(true));
+				.andExpect(jsonPath("$.completed").value(false));
 
 		mockMvc.perform(delete("/api/tasks/{id}", createdTask.id()))
 				.andExpect(status().isNoContent());
