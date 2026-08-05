@@ -70,6 +70,7 @@ public class TaskServiceImpl implements TaskService {
                             request.status(),request.dueDate(),
                             request.assignedTo());
 
+
         Tasks tasks = new TaskBuilder()
                 .withDescription(request.description())
                 .withPriority(request.priority())
@@ -78,6 +79,12 @@ public class TaskServiceImpl implements TaskService {
                 .withAssignedTo(request.assignedTo())
                 .withCompleted(request.completed())
                 .build();
+        if(request.status().equals(TaskStatus.PENDING)){
+            tasks.setStatus(TaskStatus.PENDING);
+        }
+        if (tasks.isCompleted()){
+            tasks.setStatus(TaskStatus.COMPLETED);
+        }
         Tasks saved = taskRepository.save(tasks);
         log.info("Tarea Creada [id = {}, status={}]");
 
@@ -94,7 +101,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private void validateAssigneeForStatus(TaskStatus status, String assignedTo) {
-    if ((status == TaskStatus.COMPLETED || status == TaskStatus.PENDING ) && assignedTo.isBlank()){
+    if ((status == TaskStatus.COMPLETED || status == TaskStatus.PENDING || status == TaskStatus.IN_PROGRESS ) && assignedTo.isBlank()){
         throw new BusinessException(ErrorCode.TASK_ASSIGNEE_REQUIRED,"La tarea requiere un Responsable Asignado");
     }
     }
@@ -110,7 +117,7 @@ public class TaskServiceImpl implements TaskService {
 
     if(status==TaskStatus.COMPLETED&& dueDate.isAfter(today)){
         throw new BusinessException(ErrorCode.TASK_DUE_DATE_INVALID,"No se puede marcar" +
-                "como COMPLETADA: la fecha limite aun no ha llegado");
+                " como COMPLETADA: la fecha limite aun no ha llegado" + dueDate);
 
     }
     if(status==TaskStatus.PENDING&&dueDate.isBefore(today)){

@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter;
 public class TaskBuilder {
     private String description;
     private Priority priority = Priority.MEDIUM;
-    private TaskStatus status = TaskStatus.PENDING;
+    private TaskStatus status;
     private LocalDate dueDate;
     private String assignedTo;
     private Boolean completed;

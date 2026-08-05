@@ -19,6 +19,7 @@ public record CreateTaskRequest(
         @NotNull(message = "El estado es requerido")
         @JsonProperty("taskStatus")
         TaskStatus status,
+
         @JsonDeserialize(using = LocalDateDeserializer.class)
         LocalDate dueDate,
         String assignedTo,
